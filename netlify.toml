@@ -1,0 +1,7 @@
+[build]
+  command = "npm run build"
+
+[build.environment]
+  # NEXT_PUBLIC_* and EMAIL_FROM are inlined into bundles by design
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,EMAIL_FROM"
+  SECRETS_SCAN_OMIT_PATHS = "context/feature-spec/**"

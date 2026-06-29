@@ -3,6 +3,11 @@
 **Last Updated:** June 29, 2026  
 **Current Phase:** Phase 1 — Module 06 Admin Voice Calls shipped
 
+### Netlify deploy ✅
+
+- [x] `netlify.toml` — secrets scan omits expected `NEXT_PUBLIC_*` / `EMAIL_FROM` keys and feature-spec docs
+- [x] `@opentelemetry/api` — fixes edge middleware bundling on Netlify
+
 ---
 
 ## Completed
