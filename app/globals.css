@@ -1,0 +1,268 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fafaf8;
+  --foreground: #1f2937;
+}
+
+@theme inline {
+  --color-background: #fafaf8;
+  --color-surface: #ffffff;
+  --color-primary: #1b6b3a;
+  --color-primary-dark: #145530;
+  --color-primary-light: #e8f5ee;
+  --color-accent: #d4820a;
+  --color-accent-light: #fff8ed;
+  --color-border: #e5e7eb;
+  --color-muted: #9ca3af;
+  --color-body: #1f2937;
+  --color-heading: #111827;
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-error: #dc2626;
+  --font-sans: var(--font-jakarta);
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: clip;
+  max-width: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  overflow-x: clip;
+  max-width: 100%;
+}
+
+@keyframes cart-bounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+@keyframes sale-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-cart-bounce {
+  animation: cart-bounce 0.3s ease-in-out;
+}
+
+.animate-sale-pulse {
+  animation: sale-pulse 3s ease-in-out infinite;
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+.hero-pattern {
+  background-color: #fafaf8;
+  background-image:
+    radial-gradient(circle at 20% 80%, #e8f5ee 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, #fff8ed 0%, transparent 50%),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 20px,
+      rgba(27, 107, 58, 0.03) 20px,
+      rgba(27, 107, 58, 0.03) 21px
+    );
+}
+
+@keyframes hero-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes hero-float-delayed {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-3deg);
+  }
+}
+
+.animate-hero-float {
+  animation: hero-float 4s ease-in-out infinite;
+}
+
+.animate-hero-float-delayed {
+  animation: hero-float-delayed 5s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+/* ── Admin dashboard design system ── */
+.admin-shell {
+  --admin-canvas: #f4f5f3;
+  --admin-surface: #ffffff;
+  --admin-surface-raised: #ffffff;
+  --admin-border: rgba(17, 24, 39, 0.08);
+  --admin-border-solid: #e5e7eb;
+  --admin-border-strong: rgba(17, 24, 39, 0.12);
+  --admin-text-heading: #111827;
+  --admin-text-body: #1f2937;
+  --admin-text-muted: #6b7280;
+  --admin-text-subtle: #9ca3af;
+  --admin-primary: #1b6b3a;
+  --admin-primary-hover: #145530;
+  --admin-primary-muted: #e8f5ee;
+  --admin-primary-text: #1b6b3a;
+  --admin-accent: #d4820a;
+  --admin-accent-muted: #fff8ed;
+  --admin-success: #16a34a;
+  --admin-warning: #d97706;
+  --admin-error: #dc2626;
+  --admin-info: #2563eb;
+  --admin-shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.04);
+  --admin-shadow-md: 0 4px 12px rgba(17, 24, 39, 0.06);
+  --admin-shadow-focus: 0 0 0 3px rgba(27, 107, 58, 0.18);
+  --admin-sidebar-w: 260px;
+  --admin-row-hover: color-mix(in srgb, var(--admin-primary) 8%, var(--admin-surface));
+  --admin-chart-grid: rgba(17, 24, 39, 0.08);
+  --admin-chart-text: #6b7280;
+  /* Remap storefront Tailwind tokens inside admin so dark mode works everywhere */
+  --color-background: var(--admin-canvas);
+  --color-surface: var(--admin-surface);
+  --color-border: var(--admin-border-solid);
+  --color-muted: var(--admin-text-muted);
+  --color-body: var(--admin-text-body);
+  --color-heading: var(--admin-text-heading);
+  --color-primary: var(--admin-primary);
+  --color-primary-light: var(--admin-primary-muted);
+  --background: var(--admin-canvas);
+  --foreground: var(--admin-text-body);
+  background: var(--admin-canvas);
+  color: var(--admin-text-body);
+}
+
+.admin-shell[data-theme="dark"] {
+  --admin-canvas: #0f1410;
+  --admin-surface: #1a211c;
+  --admin-surface-raised: #222b25;
+  --admin-border: rgba(255, 255, 255, 0.08);
+  --admin-border-solid: #2d3830;
+  --admin-border-strong: rgba(255, 255, 255, 0.12);
+  --admin-text-heading: #f3f4f6;
+  --admin-text-body: #d1d5db;
+  --admin-text-muted: #9ca3af;
+  --admin-text-subtle: #6b7280;
+  --admin-primary: #34d399;
+  --admin-primary-hover: #6ee7b7;
+  --admin-primary-muted: rgba(52, 211, 153, 0.12);
+  --admin-primary-text: #34d399;
+  --admin-accent: #fbbf24;
+  --admin-accent-muted: rgba(251, 191, 36, 0.12);
+  --admin-success: #4ade80;
+  --admin-warning: #fbbf24;
+  --admin-error: #f87171;
+  --admin-info: #60a5fa;
+  --admin-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --admin-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --admin-shadow-focus: 0 0 0 3px rgba(52, 211, 153, 0.25);
+  --admin-row-hover: color-mix(in srgb, var(--admin-primary) 12%, var(--admin-surface));
+  --admin-chart-grid: rgba(255, 255, 255, 0.08);
+  --admin-chart-text: #9ca3af;
+}
+
+.admin-card {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  box-shadow: var(--admin-shadow-sm);
+}
+
+.admin-card-hover {
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.admin-card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--admin-shadow-md);
+}
+
+.admin-table-row {
+  transition: background-color 100ms ease;
+}
+
+.admin-table-row:hover {
+  background: var(--admin-row-hover) !important;
+}
+
+/* Safe table row hover for all admin tables */
+.admin-shell tbody tr {
+  transition: background-color 100ms ease;
+}
+
+.admin-shell tbody tr:hover {
+  background: var(--admin-row-hover) !important;
+}
+
+.admin-shell tbody tr:hover td,
+.admin-shell tbody tr:hover th {
+  color: var(--admin-text-body);
+}
+
+.admin-shell tbody tr td,
+.admin-shell tbody tr th {
+  color: var(--admin-text-body);
+}
+
+.admin-nav-active {
+  background: var(--admin-primary-muted);
+  color: var(--admin-primary-text);
+  box-shadow: inset 3px 0 0 var(--admin-primary);
+}
+
+@keyframes admin-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.admin-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--admin-border) 25%,
+    color-mix(in srgb, var(--admin-surface) 80%, var(--admin-border)) 50%,
+    var(--admin-border) 75%
+  );
+  background-size: 200% 100%;
+  animation: admin-shimmer 1.5s ease-in-out infinite;
+}
