@@ -1,23 +1,27 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Package, Paperclip, Plus, Receipt } from "lucide-react";
+import { Package, Paperclip, Plus, Receipt, ClipboardList } from "lucide-react";
 
 type ComposerAttachMenuProps = {
   canShareProducts: boolean;
   canShareOrders: boolean;
+  canShareTickets: boolean;
   onAttachFile: (file: File) => void;
   onShareProduct: () => void;
   onShareOrder: () => void;
+  onShareTicket: () => void;
   disabled?: boolean;
 };
 
 export function ComposerAttachMenu({
   canShareProducts,
   canShareOrders,
+  canShareTickets,
   onAttachFile,
   onShareProduct,
   onShareOrder,
+  onShareTicket,
   disabled,
 }: ComposerAttachMenuProps) {
   const [open, setOpen] = useState(false);
@@ -87,6 +91,19 @@ export function ComposerAttachMenu({
               >
                 <Receipt size={16} />
                 Order
+              </button>
+            )}
+            {canShareTickets && (
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 px-4 py-2.5 text-sm hover:bg-[color-mix(in_srgb,var(--admin-primary)_6%,transparent)]"
+                onClick={() => {
+                  onShareTicket();
+                  setOpen(false);
+                }}
+              >
+                <ClipboardList size={16} />
+                Ticket
               </button>
             )}
           </div>

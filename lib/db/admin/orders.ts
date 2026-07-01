@@ -34,6 +34,52 @@ function mapOrderWithCreator(row: DbOrderRow): OrderWithCreator {
   return { ...order, creatorName };
 }
 
+const ORDER_LIST_COLUMNS =
+  "id, order_number, customer_name, customer_phone, city, total, status, created_at, source, created_by";
+
+type DbOrderListRow = {
+  id: string;
+  order_number: string;
+  customer_name: string;
+  customer_phone: string;
+  city: string;
+  total: number;
+  status: string;
+  created_at: string;
+  source?: string;
+  created_by?: string | null;
+  creator?: { name: string } | { name: string }[] | null;
+};
+
+function mapOrderListRow(row: DbOrderListRow): OrderWithCreator {
+  const creator = row.creator;
+  const creatorName = Array.isArray(creator)
+    ? creator[0]?.name ?? null
+    : creator?.name ?? null;
+  return {
+    id: row.id,
+    orderNumber: row.order_number,
+    customerName: row.customer_name,
+    customerPhone: row.customer_phone,
+    city: row.city,
+    address: "",
+    instructions: null,
+    products: [],
+    subtotal: Number(row.total),
+    discount: 0,
+    deliveryFee: 0,
+    total: Number(row.total),
+    couponCode: null,
+    status: row.status as Order["status"],
+    postexTracking: null,
+    notes: null,
+    source: (row.source ?? "storefront") as Order["source"],
+    createdBy: row.created_by ?? null,
+    createdAt: row.created_at,
+    creatorName,
+  };
+}
+
 export async function listOrdersAdmin(
   filter: OrdersFilter = {},
 ): Promise<{ orders: OrderWithCreator[]; total: number }> {
@@ -49,9 +95,10 @@ export async function listOrdersAdmin(
 
   let query = supabase
     .from("orders")
-    .select("*, creator:admin_profiles!orders_created_by_fkey(name)", {
-      count: "exact",
-    })
+    .select(
+      `${ORDER_LIST_COLUMNS}, creator:admin_profiles!orders_created_by_fkey(name)`,
+      { count: "exact" },
+    )
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -80,7 +127,7 @@ export async function listOrdersAdmin(
   if (error) throw new Error(error.message);
 
   return {
-    orders: (data as DbOrderRow[]).map(mapOrderWithCreator),
+    orders: (data as DbOrderListRow[]).map(mapOrderListRow),
     total: count ?? 0,
   };
 }
@@ -112,6 +159,7 @@ export async function updateOrderAdmin(
     postexTracking?: string | null;
     notes?: string | null;
   },
+  options?: { actorId?: string },
 ): Promise<OrderWithCreator> {
   const supabase = requireAdmin();
 
@@ -160,6 +208,14 @@ export async function updateOrderAdmin(
     (previousStatus === "delivered" || previousStatus === "returned")
   ) {
     await reverseCommissionForOrder(data.id);
+  }
+
+  if (newStatus === "returned" && previousStatus !== "returned") {
+    const order = mapOrderWithCreator(data as DbOrderRow);
+    const { maybeCreateReturnInvestigationTicket } = await import(
+      "@/lib/db/admin/ticket-automation"
+    );
+    await maybeCreateReturnInvestigationTicket(order, options?.actorId);
   }
 
   return mapOrderWithCreator(data as DbOrderRow);
@@ -220,27 +276,61 @@ export async function getOrderStatsForPeriod(
   filter?: { createdBy?: string; manualOnly?: boolean },
 ): Promise<{ count: number; revenue: number }> {
   const supabase = requireAdmin();
-  let query = supabase
-    .from("orders")
-    .select("total")
-    .gte("created_at", start.toISOString())
-    .lte("created_at", end.toISOString())
-    .neq("status", "returned");
 
-  if (filter?.createdBy) {
-    query = query.eq("created_by", filter.createdBy);
+  const { data, error } = await supabase.rpc("get_order_stats_for_period", {
+    p_start: start.toISOString(),
+    p_end: end.toISOString(),
+    p_created_by: filter?.createdBy ?? null,
+    p_manual_only: filter?.manualOnly ?? false,
+  });
+
+  if (error) {
+    // Fallback when migration 010 not applied yet
+    let query = supabase
+      .from("orders")
+      .select("total", { count: "exact", head: true })
+      .gte("created_at", start.toISOString())
+      .lte("created_at", end.toISOString())
+      .neq("status", "returned");
+
+    if (filter?.createdBy) {
+      query = query.eq("created_by", filter.createdBy);
+    }
+    if (filter?.manualOnly) {
+      query = query.eq("source", "manual");
+    }
+
+    const { count, error: countError } = await query;
+    if (countError) throw new Error(countError.message);
+
+    let sumQuery = supabase
+      .from("orders")
+      .select("total")
+      .gte("created_at", start.toISOString())
+      .lte("created_at", end.toISOString())
+      .neq("status", "returned");
+
+    if (filter?.createdBy) {
+      sumQuery = sumQuery.eq("created_by", filter.createdBy);
+    }
+    if (filter?.manualOnly) {
+      sumQuery = sumQuery.eq("source", "manual");
+    }
+
+    const { data: sumRows, error: sumError } = await sumQuery;
+    if (sumError) throw new Error(sumError.message);
+
+    const rows = sumRows ?? [];
+    return {
+      count: count ?? 0,
+      revenue: rows.reduce((sum, r) => sum + Number(r.total), 0),
+    };
   }
-  if (filter?.manualOnly) {
-    query = query.eq("source", "manual");
-  }
 
-  const { data, error } = await query;
-  if (error) throw new Error(error.message);
-
-  const rows = data ?? [];
+  const row = Array.isArray(data) ? data[0] : data;
   return {
-    count: rows.length,
-    revenue: rows.reduce((sum, r) => sum + Number(r.total), 0),
+    count: Number(row?.order_count ?? 0),
+    revenue: Number(row?.order_revenue ?? 0),
   };
 }
 

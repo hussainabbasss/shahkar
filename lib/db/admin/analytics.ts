@@ -133,6 +133,10 @@ async function getDailySparkline(
 }
 
 export async function getDashboardKpiPayload(): Promise<DashboardKpiPayload> {
+  return loadDashboardKpiPayload();
+}
+
+async function loadDashboardKpiPayload(): Promise<DashboardKpiPayload> {
   const now = new Date();
   const [
     todayCurrent,
@@ -292,9 +296,15 @@ export async function getAnalyticsData(
   const supabase = createAdminClient();
   if (!supabase) throw new Error("Supabase not configured");
 
+  const windowDays = period === "daily" ? 90 : period === "weekly" ? 180 : 365;
+  const windowStart = new Date();
+  windowStart.setDate(windowStart.getDate() - windowDays);
+  windowStart.setHours(0, 0, 0, 0);
+
   let query = supabase
     .from("orders")
     .select("total, status, city, products, coupon_code, created_at, source, created_by")
+    .gte("created_at", windowStart.toISOString())
     .order("created_at", { ascending: true });
 
   if (filter?.createdBy) {

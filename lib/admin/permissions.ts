@@ -18,7 +18,9 @@ export type PermissionKey =
   | "manage_coupons"
   | "view_analytics"
   | "manage_team"
-  | "create_message_groups";
+  | "create_message_groups"
+  | "view_tickets"
+  | "manage_tickets";
 
 export type AdminPermissions = {
   view_dashboard?: boolean;
@@ -36,6 +38,8 @@ export type AdminPermissions = {
   analytics_scope?: AnalyticsScope;
   manage_team?: boolean;
   create_message_groups?: boolean;
+  view_tickets?: boolean;
+  manage_tickets?: boolean;
 };
 
 export type CommissionTier = {
@@ -74,6 +78,8 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   view_analytics: "View analytics",
   manage_team: "Manage team (Super Admin only)",
   create_message_groups: "Create message groups",
+  view_tickets: "View tickets",
+  manage_tickets: "Manage tickets",
 };
 
 export const ROLE_TEMPLATES: Record<
@@ -95,6 +101,8 @@ export const ROLE_TEMPLATES: Record<
     view_analytics: true,
     analytics_scope: "global",
     create_message_groups: true,
+    view_tickets: true,
+    manage_tickets: true,
   },
   sales: {
     view_dashboard: true,
@@ -102,6 +110,8 @@ export const ROLE_TEMPLATES: Record<
     create_orders: true,
     view_analytics: true,
     analytics_scope: "own",
+    view_tickets: true,
+    manage_tickets: true,
   },
   custom: {},
 };

@@ -160,6 +160,7 @@ export async function getProductsByIds(ids: string[]): Promise<Product[]> {
 export async function decrementStock(
   productId: string,
   quantity: number,
+  options?: { reporterId?: string },
 ): Promise<boolean> {
   if (!isSupabaseConfigured()) return true;
 
@@ -174,11 +175,19 @@ export async function decrementStock(
 
   if (!product || product.stock < quantity) return false;
 
+  const previousStock = product.stock as number;
+  const newStock = previousStock - quantity;
+
   const { error } = await supabase
     .from("products")
-    .update({ stock: product.stock - quantity })
+    .update({ stock: newStock })
     .eq("id", productId)
     .gte("stock", quantity);
 
-  return !error;
+  if (error) return false;
+
+  const { notifyStockChange } = await import("@/lib/db/admin/ticket-automation");
+  await notifyStockChange(productId, previousStock, newStock, options?.reporterId);
+
+  return true;
 }

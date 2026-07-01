@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   BarChart3,
+  ClipboardList,
   ExternalLink,
   GitCompare,
   LayoutDashboard,
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import type { AdminNavGroup, AdminNavIconName } from "@/lib/admin/nav";
 import { fetchUnreadSummaryAction } from "@/app/actions/admin/messages";
+import { fetchMyTicketCountAction } from "@/app/actions/admin/tickets";
 
 const NAV_ICONS: Record<AdminNavIconName, LucideIcon> = {
   dashboard: LayoutDashboard,
@@ -30,6 +32,7 @@ const NAV_ICONS: Record<AdminNavIconName, LucideIcon> = {
   compare: GitCompare,
   analytics: BarChart3,
   messages: MessageSquare,
+  tickets: ClipboardList,
 };
 
 type AdminSidebarProps = {
@@ -45,18 +48,25 @@ export function AdminSidebar({
 }: AdminSidebarProps) {
   const pathname = usePathname();
   const [messagesUnread, setMessagesUnread] = useState(0);
+  const [ticketsActive, setTicketsActive] = useState(0);
 
   useEffect(() => {
     fetchUnreadSummaryAction()
       .then((s) => setMessagesUnread(s.totalUnread))
       .catch(() => {});
+    fetchMyTicketCountAction()
+      .then(setTicketsActive)
+      .catch(() => {});
     const interval = setInterval(() => {
       fetchUnreadSummaryAction()
         .then((s) => setMessagesUnread(s.totalUnread))
         .catch(() => {});
+      fetchMyTicketCountAction()
+        .then(setTicketsActive)
+        .catch(() => {});
     }, 60000);
     return () => clearInterval(interval);
-  }, [pathname]);
+  }, []);
 
   return (
     <aside
@@ -127,6 +137,14 @@ export function AdminSidebar({
                         style={{ background: "var(--admin-primary)" }}
                       >
                         {messagesUnread > 99 ? "99+" : messagesUnread}
+                      </span>
+                    )}
+                    {item.href === "/admin/tickets" && ticketsActive > 0 && (
+                      <span
+                        className="flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold text-white"
+                        style={{ background: "var(--admin-primary)" }}
+                      >
+                        {ticketsActive > 99 ? "99+" : ticketsActive}
                       </span>
                     )}
                   </Link>

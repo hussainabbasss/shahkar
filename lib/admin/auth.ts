@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import {
   parseCommissionConfig,
@@ -20,7 +21,7 @@ export type AdminUser = {
   active: boolean;
 };
 
-export async function getAdminUser(): Promise<AdminUser | null> {
+export const getAdminUser = cache(async (): Promise<AdminUser | null> => {
   if (!isSupabaseConfigured()) return null;
 
   const supabase = await createAuthServerClient();
@@ -50,7 +51,7 @@ export async function getAdminUser(): Promise<AdminUser | null> {
     commissionConfig: parseCommissionConfig(profile.commission_config),
     active: profile.active !== false,
   };
-}
+});
 
 export async function requireAdmin(): Promise<AdminUser> {
   const admin = await getAdminUser();

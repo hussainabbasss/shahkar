@@ -8,6 +8,7 @@ import {
   type OrderEntitySnapshot,
   type ProductEntitySnapshot,
 } from "@/lib/admin/messages";
+import type { TicketEntitySnapshot } from "@/lib/admin/tickets";
 import {
   sendMessageAction,
   uploadAttachmentAction,
@@ -15,6 +16,7 @@ import {
 import { ComposerAttachMenu } from "@/components/admin/messages/ComposerAttachMenu";
 import { ProductPickerSheet } from "@/components/admin/messages/ProductPickerSheet";
 import { OrderPickerSheet } from "@/components/admin/messages/OrderPickerSheet";
+import { TicketPickerSheet } from "@/components/admin/tickets/TicketPickerSheet";
 import type { AdminMessage } from "@/lib/db/admin/messages";
 
 type PendingAttachment = {
@@ -28,6 +30,7 @@ type MessageComposerProps = {
   conversationId: string;
   canShareProducts: boolean;
   canShareOrders: boolean;
+  canShareTickets: boolean;
   onSent: (message?: AdminMessage) => void;
 };
 
@@ -35,16 +38,19 @@ export function MessageComposer({
   conversationId,
   canShareProducts,
   canShareOrders,
+  canShareTickets,
   onSent,
 }: MessageComposerProps) {
   const [body, setBody] = useState("");
   const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
   const [products, setProducts] = useState<ProductEntitySnapshot[]>([]);
   const [orders, setOrders] = useState<OrderEntitySnapshot[]>([]);
+  const [tickets, setTickets] = useState<TicketEntitySnapshot[]>([]);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
   const [productPickerOpen, setProductPickerOpen] = useState(false);
   const [orderPickerOpen, setOrderPickerOpen] = useState(false);
+  const [ticketPickerOpen, setTicketPickerOpen] = useState(false);
 
   const canSend =
     !uploading &&
@@ -52,7 +58,8 @@ export function MessageComposer({
     (body.trim() ||
       attachments.length > 0 ||
       products.length > 0 ||
-      orders.length > 0);
+      orders.length > 0 ||
+      tickets.length > 0);
 
   async function handleAttachFile(file: File) {
     if (attachments.length >= MAX_ATTACHMENTS) return;
@@ -74,6 +81,7 @@ export function MessageComposer({
       body,
       productIds: products.map((p) => p.id),
       orderIds: orders.map((o) => o.id),
+      ticketIds: tickets.map((t) => t.id),
       attachments,
     });
     setSending(false);
@@ -82,6 +90,7 @@ export function MessageComposer({
       setAttachments([]);
       setProducts([]);
       setOrders([]);
+      setTickets([]);
       onSent(result.data);
     }
   }
@@ -94,7 +103,10 @@ export function MessageComposer({
         background: "var(--admin-surface)",
       }}
     >
-      {(attachments.length > 0 || products.length > 0 || orders.length > 0) && (
+      {(attachments.length > 0 ||
+        products.length > 0 ||
+        orders.length > 0 ||
+        tickets.length > 0) && (
         <div className="mb-2 flex flex-wrap gap-2">
           {attachments.map((a, i) => (
             <span
@@ -154,6 +166,25 @@ export function MessageComposer({
               </button>
             </span>
           ))}
+          {tickets.map((t, i) => (
+            <span
+              key={t.id}
+              className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs"
+              style={{
+                background: "color-mix(in srgb, var(--admin-primary) 10%, transparent)",
+              }}
+            >
+              🎫 {t.ticketKey}
+              <button
+                type="button"
+                onClick={() =>
+                  setTickets((prev) => prev.filter((_, j) => j !== i))
+                }
+              >
+                ×
+              </button>
+            </span>
+          ))}
         </div>
       )}
 
@@ -161,9 +192,11 @@ export function MessageComposer({
         <ComposerAttachMenu
           canShareProducts={canShareProducts}
           canShareOrders={canShareOrders}
+          canShareTickets={canShareTickets}
           onAttachFile={handleAttachFile}
           onShareProduct={() => setProductPickerOpen(true)}
           onShareOrder={() => setOrderPickerOpen(true)}
+          onShareTicket={() => setTicketPickerOpen(true)}
           disabled={uploading || sending}
         />
         <textarea
@@ -213,6 +246,13 @@ export function MessageComposer({
         onClose={() => setOrderPickerOpen(false)}
         onSelect={(o) => setOrders((prev) => [...prev, o])}
         selectedIds={orders.map((o) => o.id)}
+        maxCount={MAX_ENTITIES_PER_TYPE}
+      />
+      <TicketPickerSheet
+        open={ticketPickerOpen}
+        onClose={() => setTicketPickerOpen(false)}
+        onSelect={(t) => setTickets((prev) => [...prev, t])}
+        selectedIds={tickets.map((t) => t.id)}
         maxCount={MAX_ENTITIES_PER_TYPE}
       />
     </div>

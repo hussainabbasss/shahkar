@@ -12,7 +12,9 @@ import type { AdminMessage } from "@/lib/db/admin/messages";
 import { editMessageAction } from "@/app/actions/admin/messages";
 import { SharedProductCard } from "@/components/admin/messages/SharedProductCard";
 import { SharedOrderCard } from "@/components/admin/messages/SharedOrderCard";
+import { SharedTicketCard } from "@/components/admin/tickets/SharedTicketCard";
 import type { ProductEntitySnapshot, OrderEntitySnapshot } from "@/lib/admin/messages";
+import type { TicketEntitySnapshot } from "@/lib/admin/tickets";
 
 type MessageBubbleProps = {
   message: AdminMessage;
@@ -23,6 +25,7 @@ type MessageBubbleProps = {
   canViewOrders: boolean;
   onProductClick: (snapshot: ProductEntitySnapshot) => void;
   onOrderClick: (snapshot: OrderEntitySnapshot) => void;
+  onTicketClick: (snapshot: TicketEntitySnapshot) => void;
   onEdited: () => void;
 };
 
@@ -35,6 +38,7 @@ export function MessageBubble({
   canViewOrders,
   onProductClick,
   onOrderClick,
+  onTicketClick,
   onEdited,
 }: MessageBubbleProps) {
   const [editing, setEditing] = useState(false);
@@ -185,12 +189,20 @@ export function MessageBubble({
                         onProductClick(ent.snapshot as ProductEntitySnapshot)
                       }
                     />
-                  ) : (
+                  ) : ent.entityType === "order" ? (
                     <SharedOrderCard
                       key={ent.id}
                       snapshot={ent.snapshot as OrderEntitySnapshot}
                       onClick={() =>
                         onOrderClick(ent.snapshot as OrderEntitySnapshot)
+                      }
+                    />
+                  ) : (
+                    <SharedTicketCard
+                      key={ent.id}
+                      snapshot={ent.snapshot as TicketEntitySnapshot}
+                      onClick={() =>
+                        onTicketClick(ent.snapshot as TicketEntitySnapshot)
                       }
                     />
                   ),

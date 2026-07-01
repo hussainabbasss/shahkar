@@ -57,14 +57,19 @@ export async function updateOrderAction(
       }
     }
 
-    await updateOrderAdmin(orderNumber, {
-      ...(status ? { status } : {}),
-      postexTracking,
-      notes,
-    });
+    await updateOrderAdmin(
+      orderNumber,
+      {
+        ...(status ? { status } : {}),
+        postexTracking,
+        notes,
+      },
+      { actorId: admin.id },
+    );
 
     revalidatePath("/admin/orders");
     revalidatePath("/admin/dashboard");
+    revalidatePath("/admin/tickets");
     revalidatePath(`/admin/orders/${orderNumber}`);
     return { success: true };
   } catch (e) {
@@ -172,7 +177,9 @@ export async function createManualOrderAction(
     const total = subtotal - discount + deliveryFee;
 
     for (const line of validLines) {
-      const ok = await decrementStock(line.product_id, line.quantity);
+      const ok = await decrementStock(line.product_id, line.quantity, {
+        reporterId: admin.id,
+      });
       if (!ok) {
         return {
           success: false,

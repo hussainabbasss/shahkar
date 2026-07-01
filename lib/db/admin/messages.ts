@@ -10,6 +10,7 @@ import { mapOrder, mapProduct, type DbOrder, type DbProduct } from "@/lib/db/map
 import { getActiveSale } from "@/lib/db/sales";
 import { computeDisplayPrice } from "@/lib/pricing";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { TicketEntitySnapshot } from "@/lib/admin/tickets";
 import type { Order, Product } from "@/lib/types";
 
 function requireAdmin() {
@@ -53,9 +54,9 @@ export type MessageAttachment = {
 
 export type MessageEntity = {
   id: string;
-  entityType: "product" | "order";
+  entityType: "product" | "order" | "ticket";
   entityId: string;
-  snapshot: ProductEntitySnapshot | OrderEntitySnapshot;
+  snapshot: ProductEntitySnapshot | OrderEntitySnapshot | TicketEntitySnapshot;
   sortOrder: number;
 };
 
@@ -667,9 +668,12 @@ export async function getMessages(
     const list = entityByMsg.get(e.message_id) ?? [];
     list.push({
       id: e.id,
-      entityType: e.entity_type as "product" | "order",
+      entityType: e.entity_type as "product" | "order" | "ticket",
       entityId: e.entity_id,
-      snapshot: e.snapshot as ProductEntitySnapshot | OrderEntitySnapshot,
+      snapshot: e.snapshot as
+        | ProductEntitySnapshot
+        | OrderEntitySnapshot
+        | TicketEntitySnapshot,
       sortOrder: e.sort_order,
     });
     entityByMsg.set(e.message_id, list);
@@ -956,10 +960,12 @@ export async function insertMessage(opts: {
   }[];
   productIds: string[];
   orderIds: string[];
+  ticketIds: string[];
   senderName: string;
   isGroup: boolean;
   productSnapshots: ProductEntitySnapshot[];
   orderSnapshots: OrderEntitySnapshot[];
+  ticketSnapshots: TicketEntitySnapshot[];
 }): Promise<AdminMessage> {
   const supabase = requireAdmin();
 
@@ -1018,6 +1024,16 @@ export async function insertMessage(opts: {
       sort_order: opts.productSnapshots.length + i,
     });
   });
+  opts.ticketSnapshots.forEach((snap, i) => {
+    entities.push({
+      message_id: messageId,
+      entity_type: "ticket",
+      entity_id: snap.id,
+      snapshot: snap,
+      sort_order:
+        opts.productSnapshots.length + opts.orderSnapshots.length + i,
+    });
+  });
 
   if (entities.length) {
     const { error: entError } = await supabase
@@ -1030,7 +1046,12 @@ export async function insertMessage(opts: {
     ? { type: "product" as const, label: opts.productSnapshots[0].name }
     : opts.orderSnapshots[0]
       ? { type: "order" as const, label: opts.orderSnapshots[0].orderNumber }
-      : undefined;
+      : opts.ticketSnapshots[0]
+        ? {
+            type: "ticket" as const,
+            label: opts.ticketSnapshots[0].ticketKey,
+          }
+        : undefined;
 
   const preview = buildMessagePreview({
     body: opts.body,
@@ -1088,11 +1109,13 @@ export async function updateMessageBody(opts: {
     const firstEnt = entities?.[0];
     const firstEntity = firstEnt
       ? {
-          type: firstEnt.entity_type as "product" | "order",
+          type: firstEnt.entity_type as "product" | "order" | "ticket",
           label:
             firstEnt.entity_type === "product"
               ? (firstEnt.snapshot as ProductEntitySnapshot).name
-              : (firstEnt.snapshot as OrderEntitySnapshot).orderNumber,
+              : firstEnt.entity_type === "order"
+                ? (firstEnt.snapshot as OrderEntitySnapshot).orderNumber
+                : (firstEnt.snapshot as TicketEntitySnapshot).ticketKey,
         }
       : undefined;
 

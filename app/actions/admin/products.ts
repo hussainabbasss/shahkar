@@ -53,6 +53,7 @@ export async function createProductAction(
     }
     await createProductAdmin(input);
     revalidatePath("/admin/products");
+    revalidatePath("/admin/tickets");
     revalidatePath("/");
     return { success: true };
   } catch (e) {
@@ -65,10 +66,11 @@ export async function updateProductAction(
   formData: FormData,
 ): Promise<ActionResult> {
   try {
-    await requirePermission("manage_products");
+    const admin = await requirePermission("manage_products");
     const input = parseProductForm(formData);
-    await updateProductAdmin(id, input);
+    await updateProductAdmin(id, input, { actorId: admin.id });
     revalidatePath("/admin/products");
+    revalidatePath("/admin/tickets");
     revalidatePath("/");
     revalidatePath(`/products/${input.slug}`);
     return { success: true };
@@ -82,6 +84,7 @@ export async function deleteProductAction(id: string): Promise<ActionResult> {
     await requirePermission("manage_products");
     await deleteProductAdmin(id);
     revalidatePath("/admin/products");
+    revalidatePath("/admin/tickets");
     revalidatePath("/");
     return { success: true };
   } catch (e) {

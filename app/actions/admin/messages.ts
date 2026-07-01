@@ -56,6 +56,12 @@ import { getOrderByNumberAdmin } from "@/lib/db/admin/orders";
 import { getProductByIdAdmin } from "@/lib/db/admin/products";
 import { sendMessageAlertEmail } from "@/lib/email/send-message-alert";
 import type { Order, Product } from "@/lib/types";
+import type { TicketEntitySnapshot } from "@/lib/admin/tickets";
+import {
+  buildTicketSnapshot,
+  canUserShareTicket,
+  getSharedTicketDetail,
+} from "@/lib/db/admin/tickets";
 
 export type ActionResult<T = void> =
   | { success: true; data?: T }
@@ -233,6 +239,7 @@ export async function sendMessageAction(input: {
   body: string;
   productIds: string[];
   orderIds: string[];
+  ticketIds: string[];
   attachments: {
     storagePath: string;
     fileName: string;
@@ -252,9 +259,19 @@ export async function sendMessageAction(input: {
       0,
       MAX_ENTITIES_PER_TYPE,
     );
+    const ticketIds = [...new Set(input.ticketIds)].slice(
+      0,
+      MAX_ENTITIES_PER_TYPE,
+    );
     const attachments = input.attachments.slice(0, MAX_ATTACHMENTS);
 
-    if (!body && !attachments.length && !productIds.length && !orderIds.length) {
+    if (
+      !body &&
+      !attachments.length &&
+      !productIds.length &&
+      !orderIds.length &&
+      !ticketIds.length
+    ) {
       return { success: false, error: "Message cannot be empty." };
     }
 
@@ -263,6 +280,9 @@ export async function sendMessageAction(input: {
     }
     if (orderIds.length && !hasPermission(user, "view_orders")) {
       return { success: false, error: "Cannot share orders." };
+    }
+    if (ticketIds.length && !hasPermission(user, "view_tickets")) {
+      return { success: false, error: "Cannot share tickets." };
     }
 
     const productSnapshots: ProductEntitySnapshot[] = [];
@@ -291,6 +311,24 @@ export async function sendMessageAction(input: {
       orderSnapshots.push(await buildOrderSnapshot(order));
     }
 
+    let ticketSnapshots: TicketEntitySnapshot[] = [];
+    const hasManageTickets = hasPermission(user, "manage_tickets");
+    for (const id of ticketIds) {
+      const canShare = await canUserShareTicket(
+        id,
+        user.id,
+        hasManageTickets,
+      );
+      if (!canShare) {
+        return { success: false, error: "Cannot share this ticket." };
+      }
+      const ticket = await getSharedTicketDetail(id);
+      if (!ticket) {
+        return { success: false, error: "Ticket not found." };
+      }
+      ticketSnapshots.push(await buildTicketSnapshot(ticket));
+    }
+
     const conv = await getConversationById(input.conversationId);
     if (!conv) return { success: false, error: "Conversation not found." };
 
@@ -301,10 +339,12 @@ export async function sendMessageAction(input: {
       attachments,
       productIds,
       orderIds,
+      ticketIds,
       senderName: user.name,
       isGroup: conv.type === "group",
       productSnapshots,
       orderSnapshots,
+      ticketSnapshots,
     });
 
     void notifyMessageRecipients({

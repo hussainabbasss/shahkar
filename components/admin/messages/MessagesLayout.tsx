@@ -27,7 +27,10 @@ type MessagesLayoutProps = {
   canCreateGroups: boolean;
   canShareProducts: boolean;
   canShareOrders: boolean;
+  canShareTickets: boolean;
   canManageProducts: boolean;
+  canViewTickets: boolean;
+  canManageTickets: boolean;
   initialConversationId?: string;
   initialConversation?: ConversationListItem;
   initialMembers?: ConversationMember[];
@@ -43,7 +46,10 @@ export function MessagesLayout({
   canCreateGroups,
   canShareProducts,
   canShareOrders,
+  canShareTickets,
   canManageProducts,
+  canViewTickets,
+  canManageTickets,
   initialConversationId,
   initialConversation,
   initialMembers = [],
@@ -328,7 +334,10 @@ export function MessagesLayout({
             createdById={createdById}
             canShareProducts={canShareProducts}
             canShareOrders={canShareOrders}
+            canShareTickets={canShareTickets}
             canManageProducts={canManageProducts}
+            canViewTickets={canViewTickets}
+            canManageTickets={canManageTickets}
             showBack
             onBack={() => {
               setMobileShowThread(false);

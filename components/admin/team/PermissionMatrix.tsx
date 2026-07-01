@@ -14,7 +14,9 @@ const STANDARD_PERMISSION_KEYS = PERMISSION_KEYS.filter(
   (k) =>
     k !== "manage_team" &&
     k !== "mark_order_delivered" &&
-    k !== "create_message_groups",
+    k !== "create_message_groups" &&
+    k !== "view_tickets" &&
+    k !== "manage_tickets",
 );
 
 type PermissionMatrixProps = {
@@ -105,6 +107,47 @@ export function PermissionMatrix({
           />
           {PERMISSION_LABELS.create_message_groups}
         </label>
+      </div>
+
+      <div
+        className="rounded-lg p-4"
+        style={{
+          border: "1px solid var(--admin-border)",
+          background: "color-mix(in srgb, var(--admin-primary) 4%, transparent)",
+        }}
+      >
+        <p className="mb-1 text-sm font-semibold">Tickets</p>
+        <p className="mb-3 text-xs" style={{ color: "var(--admin-text-muted)" }}>
+          Internal issue tracking — board, assignments, and sharing in Messages.
+        </p>
+        <div className="space-y-2">
+          <label
+            className="flex items-center gap-2 text-sm"
+            style={{ color: "var(--admin-text-heading)" }}
+          >
+            <input
+              type="checkbox"
+              name="perm_view_tickets"
+              defaultChecked={permissions.view_tickets === true}
+              disabled={disabled}
+              className="rounded"
+            />
+            {PERMISSION_LABELS.view_tickets}
+          </label>
+          <label
+            className="flex items-center gap-2 text-sm"
+            style={{ color: "var(--admin-text-heading)" }}
+          >
+            <input
+              type="checkbox"
+              name="perm_manage_tickets"
+              defaultChecked={permissions.manage_tickets === true}
+              disabled={disabled}
+              className="rounded"
+            />
+            {PERMISSION_LABELS.manage_tickets}
+          </label>
+        </div>
       </div>
 
       <div>

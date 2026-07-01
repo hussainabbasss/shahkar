@@ -9,6 +9,7 @@ import { MessageComposer } from "@/components/admin/messages/MessageComposer";
 import { GroupHeader } from "@/components/admin/messages/GroupHeader";
 import { SharedProductDetailDialog } from "@/components/admin/messages/SharedProductDetailDialog";
 import { SharedOrderDetailDialog } from "@/components/admin/messages/SharedOrderDetailDialog";
+import { SharedTicketDetailDialog } from "@/components/admin/tickets/SharedTicketDetailDialog";
 import { useMessagesRealtime } from "@/components/admin/messages/useMessagesRealtime";
 import type {
   AdminMessage,
@@ -17,6 +18,7 @@ import type {
   StaffMember,
 } from "@/lib/db/admin/messages";
 import type { OrderEntitySnapshot, ProductEntitySnapshot } from "@/lib/admin/messages";
+import type { TicketEntitySnapshot } from "@/lib/admin/tickets";
 
 type MessageThreadProps = {
   conversation: ConversationListItem;
@@ -26,7 +28,10 @@ type MessageThreadProps = {
   createdById?: string | null;
   canShareProducts: boolean;
   canShareOrders: boolean;
+  canShareTickets: boolean;
   canManageProducts: boolean;
+  canViewTickets: boolean;
+  canManageTickets: boolean;
   onBack?: () => void;
   showBack?: boolean;
 };
@@ -39,7 +44,10 @@ export function MessageThread({
   createdById,
   canShareProducts,
   canShareOrders,
+  canShareTickets,
   canManageProducts,
+  canViewTickets,
+  canManageTickets,
   onBack,
   showBack,
 }: MessageThreadProps) {
@@ -51,6 +59,8 @@ export function MessageThread({
     useState<ProductEntitySnapshot | null>(null);
   const [orderDialog, setOrderDialog] =
     useState<OrderEntitySnapshot | null>(null);
+  const [ticketDialog, setTicketDialog] =
+    useState<TicketEntitySnapshot | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const realtimeDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -201,6 +211,7 @@ export function MessageThread({
                 canViewOrders={canShareOrders}
                 onProductClick={setProductDialog}
                 onOrderClick={setOrderDialog}
+                onTicketClick={setTicketDialog}
                 onEdited={() => void loadMessages(false)}
               />
             ))}
@@ -214,6 +225,7 @@ export function MessageThread({
           conversationId={conversation.id}
           canShareProducts={canShareProducts}
           canShareOrders={canShareOrders}
+          canShareTickets={canShareTickets}
           onSent={handleSent}
         />
       )}
@@ -230,6 +242,14 @@ export function MessageThread({
           snapshot={orderDialog}
           canViewOrders={canShareOrders}
           onClose={() => setOrderDialog(null)}
+        />
+      )}
+      {ticketDialog && (
+        <SharedTicketDetailDialog
+          snapshot={ticketDialog}
+          canViewTickets={canViewTickets}
+          canManageTickets={canManageTickets}
+          onClose={() => setTicketDialog(null)}
         />
       )}
     </div>

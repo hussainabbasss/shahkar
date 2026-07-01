@@ -129,7 +129,7 @@ export function buildMessagePreview(opts: {
   body: string | null;
   senderName?: string;
   hasAttachments?: boolean;
-  firstEntity?: { type: "product" | "order"; label: string };
+  firstEntity?: { type: "product" | "order" | "ticket"; label: string };
   isGroup?: boolean;
 }): string {
   let preview: string;
@@ -139,7 +139,9 @@ export function buildMessagePreview(opts: {
     preview =
       opts.firstEntity.type === "product"
         ? `📦 Product: ${opts.firstEntity.label}`
-        : `🧾 Order: ${opts.firstEntity.label}`;
+        : opts.firstEntity.type === "order"
+          ? `🧾 Order: ${opts.firstEntity.label}`
+          : `🎫 Ticket: ${opts.firstEntity.label}`;
   } else {
     preview = "📎 Attachment";
   }

@@ -1,7 +1,7 @@
 # Shahkar.store — Progress Tracker
 
-**Last Updated:** June 29, 2026  
-**Current Phase:** Phase 1 — Module 06 Admin Voice Calls shipped
+**Last Updated:** June 30, 2026  
+**Current Phase:** Phase 1 — Admin panel speed optimizations (navigate-first UX)
 
 ### Netlify deploy ✅
 
@@ -11,6 +11,17 @@
 ---
 
 ## Completed
+
+### Admin Panel Speed (P0–P2) ✅
+
+- [x] **Navigate-first UX** — `(panel)` route group with persistent `AdminPanelShell` (sidebar always visible); `loading.tsx` at admin + panel + high-traffic routes
+- [x] **Skeleton components** — `AdminTableSkeleton`, `AdminKpiSkeleton`, `AdminChartSkeleton`, `AdminContentSkeleton`
+- [x] **Suspense boundaries** — orders, products, dashboard, tickets, analytics split into fast chrome + async content
+- [x] **Auth dedup** — `react.cache()` on `getAdminUser()` (layout + pages share one request-scoped fetch)
+- [x] **Sidebar polling** — unread/ticket badge fetch on mount + 60s interval only (removed `pathname` re-fetch on every nav)
+- [x] **Voice scoped to Messages** — `VoiceCallProvider` only in `(panel)/messages/layout.tsx` (not every admin page)
+- [x] **Query fixes** — `get_order_stats_for_period` RPC + `idx_orders_created_at`; narrowed `listOrdersAdmin` columns; analytics date-bounded (90d window); dashboard KPI `unstable_cache` 60s TTL
+- [x] Migration `010_admin_speed.sql`
 
 ### Module 01 — Landing Page ✅
 
@@ -95,11 +106,32 @@
 - [x] ICE config API: `GET /api/admin/voice/ice-servers` — STUN + optional TURN from env
 - [x] WebRTC client: `useVoiceCall.ts` — P2P + mesh peer map, Supabase Broadcast signaling on `voice:{callId}`
 - [x] Ringtone: `useCallRingtone.ts` + `public/sounds/incoming-call.mp3` with autoplay-unlock + *Tap to hear ringtone*
-- [x] Global overlay: `VoiceCallProvider` + `VoiceCallOverlay` in `VoiceCallShell` → `app/admin/layout.tsx` (`z-[200]`)
+- [x] Global overlay: `VoiceCallProvider` + `VoiceCallOverlay` in `(panel)/messages/layout.tsx` (`z-[200]`)
 - [x] Personal incoming channel `voice-user:{userId}` + postgres_changes fallback on call/participant rows
 - [x] `CallButton` in DM header + `GroupHeader` (members only; hidden in audit)
 - [x] DM 1:1 P2P; group mesh (max 6); 45s ring timeout; concurrent-call guard; Roman Urdu call UI copy
 - [x] `.env.example` updated: `VOICE_TURN_URL`, `VOICE_TURN_USERNAME`, `VOICE_TURN_CREDENTIAL`
+
+### Module 07 — Admin Tickets (Epics, Stories, Board & Messages) ✅
+
+- [x] Migration `006_admin_tickets.sql` — `admin_tickets`, `admin_ticket_assignee_reads`, `admin_message_entities` extended for `ticket`, Realtime
+- [x] RBAC: `view_tickets` + `manage_tickets` — Team matrix Tickets subsection; manager + sales templates default both `true`
+- [x] Sidebar **Tickets** under Operations (`view_tickets`); badge = my `todo` + `in_progress` count
+- [x] Domain helpers: `lib/admin/tickets.ts` — `formatTicketKey`, hierarchy validation, status/department labels
+- [x] Data layer: `lib/db/admin/tickets.ts` — CRUD, board/list queries, parent search, snapshots, assignee reads debounce
+- [x] Server actions: `app/actions/admin/tickets.ts` — create, update, status, assign, delete, search, shared detail
+- [x] Email: `lib/email/send-ticket-assignment-alert.ts` — Resend on assignee set/change; debounce via `admin_ticket_assignee_reads`
+- [x] Routes: `/admin/tickets` (board + list), `/admin/tickets/new`, `/admin/tickets/[ticketKey]`, `/admin/tickets/[ticketKey]/edit`
+- [x] Kanban board — To Do / In Progress / Done columns; HTML5 drag-and-drop status updates (`manage_tickets`)
+- [x] Filters: department chips, Epic dropdown, Story dropdown (subtree filter)
+- [x] Hierarchy enforced server-side: Epic → Story → Task → Sub-task; parent delete orphans children (`ON DELETE SET NULL`)
+- [x] Dashboard `MyTicketsCard` — up to 5 assigned active tickets (`view_tickets`)
+- [x] Messages: Ticket in composer **+** menu; `TicketPickerSheet`; `SharedTicketCard` + `SharedTicketDetailDialog`; max 3 per message
+- [x] Share rule: `view_tickets` + (`manage_tickets` OR reporter/assignee of ticket)
+- [x] Configurable departments — `admin_ticket_departments` table; **Naya department** on create/edit form (`manage_tickets`)
+- [x] Ticket comments on detail page (`admin_ticket_comments`); anyone with `view_tickets` can post
+- [x] Story detail: tasks + nested sub-tasks with inline **Task add karein** / **Sub-task add karein** (`manage_tickets`)
+- [x] Ticket automation — auto-create on order `returned` (`Investigate return: SHA-…`) and low stock (`Restock: …`); `linked_order_id` / `linked_product_id` on tickets; manual order link on create/edit
 
 ---
 
@@ -111,6 +143,8 @@ _None_
 
 ## Next Up
 
+- SQL-based unread message counts (replace full message scan in `listMyConversations`)
+- Dynamic `import()` for Recharts on analytics pages
 - PostEx API integration (label printing)
 - WhatsApp/email notifications on new orders
 - Commission payout / wallet (reporting only today)
@@ -121,7 +155,7 @@ _None_
 
 1. **WhatsApp number** — placeholder `923001234567` in `lib/constants.ts`; replace with real business number before launch.
 2. **Product images** — using SVG placeholders; replace with real 800×800 product photos before launch.
-3. **Supabase project** — run migrations `001` through `005`, seed SQL, then `npm run admin:seed` with `ADMIN_SEED_EMAIL` / `ADMIN_SEED_PASSWORD`.
+3. **Supabase project** — run migrations `001` through `010`, seed SQL, then `npm run admin:seed` with `ADMIN_SEED_EMAIL` / `ADMIN_SEED_PASSWORD`.
 4. **Voice TURN (production)** — set `VOICE_TURN_*` in `.env.local` for reliable mobile NAT traversal (Metered.ca / Twilio).
 
 ---
@@ -135,35 +169,42 @@ app/
 │   ├── cart.ts             # Cart sync server actions
 │   ├── coupons.ts          # validateCoupon
 │   ├── orders.ts           # createOrder (storefront)
-│   └── admin/              # Admin CRUD + auth + team + manual orders + messages + voice
+│   └── admin/              # Admin CRUD + auth + team + manual orders + messages + voice + tickets
 ├── admin/                  # Protected admin routes
+│   ├── layout.tsx          # Theme only
+│   ├── loading.tsx         # Full-panel skeleton fallback
 │   ├── login/page.tsx
-│   ├── dashboard/page.tsx
-│   ├── messages/           # inbox + [conversationId] deep links
-│   ├── products/           # list, new, [id]/edit
-│   ├── orders/             # list, new, [orderNumber]
-│   ├── sales/              # list, new, [id]/edit
-│   ├── coupons/            # list, new, [id]/edit
-│   ├── team/               # list, new, [id], [id]/analytics, compare
-│   └── analytics/page.tsx  # global or own-scoped
+│   ├── page.tsx            # Redirect → dashboard
+│   └── (panel)/            # Persistent sidebar shell
+│       ├── layout.tsx
+│       ├── loading.tsx
+│       ├── dashboard/
+│       ├── messages/       # + voice layout
+│       ├── tickets/
+│       ├── products/
+│       ├── orders/
+│       ├── sales/
+│       ├── coupons/
+│       ├── team/
+│       └── analytics/
 └── (public)/               # Storefront routes
 
 components/
 ├── ui/                     # Buttons, badges, headings, skeleton
 ├── layout/                 # Shell components
 ├── home/                   # Homepage sections
-├── products/                 # ProductCard, gallery, actions, sticky bar
+├── products/               # ProductCard, gallery, actions, sticky bar
 ├── cart/                   # CartItemList, CouponInput, OrderSummary
 ├── checkout/               # CheckoutForm, CheckoutSummary, COD badge
 ├── order/                  # Confirmation components
-└── admin/                  # AdminLayout, forms, tables, charts, team/, messages/, voice/
+└── admin/                  # AdminLayout, AdminPanelShell, forms, tables, charts, skeletons/, team/, messages/, voice/, tickets/
 
 lib/
-├── admin/                  # auth, guards, permissions, commission, nav, messages, voice utils
+├── admin/                  # auth, guards, permissions, commission, nav, messages, voice, tickets utils
 ├── data/                   # Re-exports from lib/db (backward compat)
 ├── db/                     # Supabase data access + mappers
-│   └── admin/              # Admin-only queries (orders, team, analytics, messages, voice, …)
-├── email/                  # send-message-alert.ts (Resend)
+│   └── admin/              # Admin-only queries (orders, team, analytics, messages, voice, tickets, …)
+├── email/                  # send-message-alert.ts, send-ticket-assignment-alert.ts (Resend)
 ├── supabase/               # browser, server, server-auth, middleware clients
 ├── cart/                   # CartProvider + session cookie
 ├── pricing.ts              # computeDisplayPrice, coupon discount
@@ -179,6 +220,11 @@ supabase/
 ├── migrations/003_admin_rbac.sql
 ├── migrations/004_admin_messages.sql
 ├── migrations/005_admin_voice_calls.sql
+├── migrations/006_admin_tickets.sql
+├── migrations/007_admin_ticket_departments.sql
+├── migrations/008_admin_ticket_comments.sql
+├── migrations/009_admin_ticket_automation.sql
+├── migrations/010_admin_speed.sql
 └── seed.sql
 
 scripts/seed-admin.mjs      # Create Supabase Auth Super Admin user
@@ -188,7 +234,7 @@ scripts/seed-admin.mjs      # Create Supabase Auth Super Admin user
 
 ## Admin Setup Checklist
 
-1. Apply `001_initial_schema.sql` through `005_admin_voice_calls.sql` to Supabase
+1. Apply `001_initial_schema.sql` through `010_admin_speed.sql` to Supabase
 2. Run `supabase/seed.sql` for products/sales/coupons
 3. Copy `.env.example` → `.env.local` with Supabase keys + optional Resend vars
 4. Run `ADMIN_SEED_EMAIL=... ADMIN_SEED_PASSWORD=... npm run admin:seed`
@@ -197,17 +243,17 @@ scripts/seed-admin.mjs      # Create Supabase Auth Super Admin user
 
 ---
 
-## Verification Checklist (Module 05)
+## Verification Checklist (Module 07)
 
-- [ ] Apply migration `004_admin_messages.sql` to Supabase
-- [ ] Manager template pre-checks **Create message groups**; Sales does not
-- [ ] Staff A can DM staff B; duplicate pair reuses one conversation
-- [ ] User with `create_message_groups` creates group with 3+ members
-- [ ] Super Admin Audit tab lists non-member threads; composer hidden, send returns 403
-- [ ] Attachments, product/order shares, sent time, edit, Realtime work in thread
-- [ ] Dashboard shows unread messages card; sidebar badge updates
-- [ ] First message in unread burst sends email; rapid messages debounced to one email
-- [ ] Message send succeeds when `RESEND_API_KEY` is unset (dev skip)
+- [ ] Apply migration `006_admin_tickets.sql` to Supabase
+- [ ] `view_tickets` / `manage_tickets` on Team matrix; manager + sales templates pre-check both
+- [ ] Sidebar Tickets hidden without `view_tickets`
+- [ ] Epic creates with no parent; Story under Epic; Task under Story/Epic; Sub-task under Task only
+- [ ] Board columns + drag updates status; department / epic / story filters work
+- [ ] Create with assignee sends one email; reassign sends to new assignee only
+- [ ] `TKT-XXXX` URL resolves; delete parent orphans children with warning
+- [ ] Ticket in Messages **+** menu; picker search; max 3 per message; card + dialog
+- [ ] Dashboard My tickets card; sidebar badge; email skipped when `RESEND_API_KEY` unset
 
 ## Verification Checklist (Module 06)
 

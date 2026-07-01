@@ -71,9 +71,10 @@ export async function updateOrderStatusAction(
       return { success: false, error: "Permission denied for this status." };
     }
 
-    await updateOrderAdmin(orderNumber, { status: newStatus });
+    await updateOrderAdmin(orderNumber, { status: newStatus }, { actorId: admin.id });
     revalidatePath("/admin/dashboard");
     revalidatePath("/admin/orders");
+    revalidatePath("/admin/tickets");
     revalidatePath(`/admin/orders/${orderNumber}`);
     return { success: true };
   } catch (e) {

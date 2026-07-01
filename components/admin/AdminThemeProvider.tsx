@@ -54,7 +54,7 @@ export function AdminThemeProvider({
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      <div className="admin-shell flex min-h-screen" data-theme={theme}>
+      <div className="admin-shell min-h-screen w-full" data-theme={theme}>
         {children}
       </div>
     </ThemeContext.Provider>

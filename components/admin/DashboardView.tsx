@@ -13,10 +13,13 @@ import { KpiHeroPanel } from "@/components/admin/KpiHeroPanel";
 import { KpiStatTile } from "@/components/admin/KpiStatTile";
 import { RecentOrdersTable } from "@/components/admin/RecentOrdersTable";
 import { NewMessagesCard } from "@/components/admin/messages/NewMessagesCard";
+import { MyTicketsCard } from "@/components/admin/tickets/MyTicketsCard";
 import { SegmentedControl } from "@/components/admin/SegmentedControl";
 import { AdminEmptyState } from "@/components/admin/AdminUI";
 import type { DashboardKpiPayload, PeriodKey } from "@/lib/db/admin/analytics";
 import type { UnreadSummaryItem } from "@/lib/db/admin/messages";
+import type { TicketDepartmentRecord } from "@/lib/db/admin/ticket-departments";
+import type { MyTicketSummary } from "@/lib/db/admin/tickets";
 import type { Order, OrderStatus } from "@/lib/types";
 
 type DashboardViewProps = {
@@ -25,6 +28,9 @@ type DashboardViewProps = {
   recentOrders: Order[];
   allowedStatuses: OrderStatus[];
   unreadMessages?: UnreadSummaryItem[];
+  myTickets?: MyTicketSummary[];
+  ticketDepartments?: TicketDepartmentRecord[];
+  showMyTickets?: boolean;
 };
 
 function getGreeting(): string {
@@ -56,6 +62,9 @@ export function DashboardView({
   recentOrders,
   allowedStatuses,
   unreadMessages = [],
+  myTickets = [],
+  ticketDepartments = [],
+  showMyTickets = false,
 }: DashboardViewProps) {
   const [period, setPeriod] = useState<PeriodKey>("today");
   const firstName = adminName.split(" ")[0] ?? adminName;
@@ -149,6 +158,10 @@ export function DashboardView({
       )}
 
       <NewMessagesCard items={unreadMessages} />
+
+      {showMyTickets && (
+        <MyTicketsCard items={myTickets} departments={ticketDepartments} />
+      )}
 
       {recentOrders.length === 0 ? (
         <AdminEmptyState message="No orders yet — orders from checkout will appear here." />

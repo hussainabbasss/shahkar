@@ -73,8 +73,18 @@ export async function createProductAdmin(input: ProductInput): Promise<Product> 
 export async function updateProductAdmin(
   id: string,
   input: ProductInput,
+  options?: { actorId?: string },
 ): Promise<Product> {
   const supabase = requireAdmin();
+
+  const { data: existing } = await supabase
+    .from("products")
+    .select("stock")
+    .eq("id", id)
+    .maybeSingle();
+
+  const previousStock = existing ? Number(existing.stock) : input.stock;
+
   const { data, error } = await supabase
     .from("products")
     .update({
@@ -95,6 +105,10 @@ export async function updateProductAdmin(
     .single();
 
   if (error) throw new Error(error.message);
+
+  const { notifyStockChange } = await import("@/lib/db/admin/ticket-automation");
+  await notifyStockChange(id, previousStock, input.stock, options?.actorId);
+
   return mapProduct(data as DbProduct);
 }
 

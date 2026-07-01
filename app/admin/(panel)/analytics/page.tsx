@@ -4,9 +4,7 @@ import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { StaffAnalyticsView } from "@/components/admin/StaffAnalyticsView";
 import { AdminEmptyState } from "@/components/admin/AdminUI";
 import { getCommissionSummaryForUser } from "@/lib/admin/commission";
-import {
-  getAnalyticsScope,
-} from "@/lib/admin/permissions";
+import { getAnalyticsScope } from "@/lib/admin/permissions";
 import { requirePermission } from "@/lib/admin/guards";
 import { getAnalyticsData } from "@/lib/db/admin/analytics";
 import { listOrdersAdmin } from "@/lib/db/admin/orders";

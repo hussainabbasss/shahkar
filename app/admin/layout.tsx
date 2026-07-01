@@ -1,11 +1,10 @@
-import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { AdminThemeProvider } from "@/components/admin/AdminThemeProvider";
-import { VoiceCallShell } from "@/components/admin/voice/VoiceCallShell";
 import {
   ADMIN_THEME_COOKIE,
   parseAdminTheme,
 } from "@/lib/admin/theme";
+import type { Metadata } from "next";
+import { cookies } from "next/headers";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -22,8 +21,6 @@ export default async function AdminRootLayout({
   );
 
   return (
-    <AdminThemeProvider initialTheme={initialTheme}>
-      <VoiceCallShell>{children}</VoiceCallShell>
-    </AdminThemeProvider>
+    <AdminThemeProvider initialTheme={initialTheme}>{children}</AdminThemeProvider>
   );
 }

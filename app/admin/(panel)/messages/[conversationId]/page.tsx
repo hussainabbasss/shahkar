@@ -7,19 +7,25 @@ import {
   hasPermission,
   isSuperAdmin,
 } from "@/lib/admin/permissions";
+import {
+  getConversationById,
+  getConversationListItem,
+  getConversationMembers,
+} from "@/lib/db/admin/messages";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Messages",
 };
 
-export default async function AdminMessagesPage({
-  searchParams,
+export default async function AdminMessagesConversationPage({
+  params,
 }: {
-  searchParams: Promise<{ with?: string }>;
+  params: Promise<{ conversationId: string }>;
 }) {
   const admin = await requireAdmin();
-  const params = await searchParams;
+  const { conversationId } = await params;
 
   if (!isSupabaseConfigured()) {
     return (
@@ -29,6 +35,14 @@ export default async function AdminMessagesPage({
     );
   }
 
+  const conv = await getConversationById(conversationId);
+  if (!conv) notFound();
+
+  const [initialConversation, initialMembers] = await Promise.all([
+    getConversationListItem(conversationId, admin.id),
+    getConversationMembers(conversationId),
+  ]);
+
   return (
     <AdminLayout title="Messages" admin={admin}>
       <MessagesLayout
@@ -37,8 +51,14 @@ export default async function AdminMessagesPage({
         canCreateGroups={hasPermission(admin, "create_message_groups")}
         canShareProducts={hasPermission(admin, "view_products")}
         canShareOrders={hasPermission(admin, "view_orders")}
+        canShareTickets={hasPermission(admin, "view_tickets")}
         canManageProducts={hasPermission(admin, "manage_products")}
-        withUserId={params.with}
+        canViewTickets={hasPermission(admin, "view_tickets")}
+        canManageTickets={hasPermission(admin, "manage_tickets")}
+        initialConversationId={conversationId}
+        initialConversation={initialConversation ?? undefined}
+        initialMembers={initialMembers}
+        initialCreatedById={conv.created_by}
       />
     </AdminLayout>
   );

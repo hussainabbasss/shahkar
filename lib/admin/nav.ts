@@ -14,7 +14,8 @@ export type AdminNavIconName =
   | "team"
   | "compare"
   | "analytics"
-  | "messages";
+  | "messages"
+  | "tickets";
 
 export type AdminNavItem = {
   href: string;
@@ -65,6 +66,12 @@ const ALL_NAV_GROUPS: AdminNavGroup[] = [
         href: "/admin/messages",
         label: "Messages",
         icon: "messages",
+      },
+      {
+        href: "/admin/tickets",
+        label: "Tickets",
+        icon: "tickets",
+        permission: "view_tickets",
       },
     ],
   },
